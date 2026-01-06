@@ -1,32 +1,23 @@
 #include <FastLED.h>
-#include <Conceptinetics.h>
+#include <DMXSerial.h>
 
 // --------- KONFIG ---------
 #define LED_PIN 6
-#define NUM_LEDS 120      // 2m WS2813 @ 60LED/m
-#define DMX_START 1       // DMX kezdő cím
+#define NUM_LEDS 120         // 2m * 60 LED/m
+#define DMX_START 1          // DMX kezdő cím
 
-//#define MODE_B        // csak az egyiket hagyd!
+//#define MODE_B             // csak az egyiket hagyd
 #define MODE_A
 
 CRGB leds[NUM_LEDS];
 
-// DMX beállítás
-#ifdef MODE_A
-#define DMX_CHANNELS 6
-#else
-#define DMX_CHANNELS 5
-#endif
-
-DMX_Slave dmx_slave(DMX_CHANNELS);
-
-// --------- EFFEKT SEGÉDVÁLTOZÓK ---------
+// --------- Effekt változók ---------
 uint8_t rainbowHue = 0;
 uint8_t fadeValue = 0;
 bool fadeDir = true;
 unsigned long lastStep = 0;
 
-// --------- SEGÉDFÜGGVÉNYEK ---------
+// --------- Segédfüggvények ---------
 void showColor(uint8_t r, uint8_t g, uint8_t b, uint8_t master)
 {
   for(int i=0;i<NUM_LEDS;i++)
@@ -53,7 +44,8 @@ void rainbowEffect()
 void instantChange()
 {
   static uint8_t colorIndex = 0;
-  uint8_t colors[7][3] = {
+  uint8_t colors[7][3] =
+  {
     {255,0,0},
     {0,255,0},
     {0,0,255},
@@ -76,34 +68,36 @@ void fadeChange()
   if (fadeValue == 0) fadeDir = true;
 
   CHSV color(rainbowHue, 255, fadeValue);
-  for(int i=0;i<NUM_LEDS;i++) leds[i] = color;
+  for(int i=0;i<NUM_LEDS;i++)
+    leds[i] = color;
+
   rainbowHue++;
   FastLED.show();
 }
 
-// ----------------- SETUP -----------------
+// --------- SETUP ---------
 void setup()
 {
   FastLED.addLeds<NEOPIXEL, LED_PIN>(leds, NUM_LEDS);
   FastLED.clear();
   FastLED.show();
 
-  dmx_slave.enable();
-  dmx_slave.setStartAddress(DMX_START);
+  // DMX fogadás
+  DMXSerial.init(DMXReceiver);
 }
 
-// ----------------- LOOP ------------------
+// --------- LOOP ---------
 void loop()
 {
 #ifdef MODE_A
-  uint8_t R = dmx_slave.getChannelValue(1);
-  uint8_t G = dmx_slave.getChannelValue(2);
-  uint8_t B = dmx_slave.getChannelValue(3);
-  uint8_t Master = dmx_slave.getChannelValue(4);
-  uint8_t Strobe = dmx_slave.getChannelValue(5);
-  uint8_t Mode = dmx_slave.getChannelValue(6);
+  uint8_t R = DMXSerial.read(DMX_START + 0);
+  uint8_t G = DMXSerial.read(DMX_START + 1);
+  uint8_t B = DMXSerial.read(DMX_START + 2);
+  uint8_t Master = DMXSerial.read(DMX_START + 3);
+  uint8_t Strobe = DMXSerial.read(DMX_START + 4);
+  uint8_t Mode = DMXSerial.read(DMX_START + 5);
 
-  // Strobe
+  // ----- Strobe -----
   static unsigned long strobeTimer = 0;
   if(Strobe > 0)
   {
@@ -113,13 +107,17 @@ void loop()
       static bool on = false;
       on = !on;
       if(on) showColor(R,G,B,Master);
-      else FastLED.clear(), FastLED.show();
+      else
+      {
+        FastLED.clear();
+        FastLED.show();
+      }
       strobeTimer = millis();
     }
     return;
   }
 
-  // Mode Effektek
+  // ----- Mode Effektek -----
   if(Mode > 0 && millis() - lastStep > 30)
   {
     if(Mode < 85) rainbowEffect();
@@ -130,20 +128,22 @@ void loop()
     return;
   }
 
-  // Normál RGB + Master
+  // ---- Normál RGB + Master ----
   showColor(R,G,B,Master);
 
 #endif
 
 
+
 #ifdef MODE_B
-  uint8_t segment = dmx_slave.getChannelValue(1);
-  uint8_t R = dmx_slave.getChannelValue(2);
-  uint8_t G = dmx_slave.getChannelValue(3);
-  uint8_t B = dmx_slave.getChannelValue(4);
-  uint8_t Master = dmx_slave.getChannelValue(5);
+  uint8_t segment = DMXSerial.read(DMX_START + 0);
+  uint8_t R = DMXSerial.read(DMX_START + 1);
+  uint8_t G = DMXSerial.read(DMX_START + 2);
+  uint8_t B = DMXSerial.read(DMX_START + 3);
+  uint8_t Master = DMXSerial.read(DMX_START + 4);
 
   int ledIndex = map(segment, 0, 255, 0, NUM_LEDS-1);
+
   for(int i=0;i<NUM_LEDS;i++)
   {
     if(i <= ledIndex)
@@ -151,6 +151,7 @@ void loop()
     else
       leds[i] = CRGB::Black;
   }
+
   FastLED.show();
 #endif
 }
