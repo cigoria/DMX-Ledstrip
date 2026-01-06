@@ -6,8 +6,46 @@ A projekt megépítéséhez az alábbi főbb alkatrészekre van szükség:
 
 * **Arduino nano:** [Aliexpress link](https://www.aliexpress.com/item/1005007475356474.html) - Arduino Nano v3 usb-c
 * **RGB LED Szalag:** [Aliexpress link](https://www.aliexpress.com/item/1005006766819624.html) - WS2813 5V 2m 60led IP30 Black
+* **DMX → TTL átalakító:** MAX485
 
 ---
+
+## MAX485 Bekötés
+
+### DMX → MAX485
+A legtöbb DMX csatlakozó esetén:
+
+- **DMX+ → A**
+- **DMX− → B**
+- **GND → GND**
+
+---
+
+### MAX485 → Arduino Nano
+
+| MAX485 Pin | Arduino Pin |
+| :--- | :--- |
+| RO | **D2** |
+| RE | **GND** |
+| DE | **GND** |
+| DI | Nem használt |
+| VCC | 5V |
+| GND | GND |
+
+> Fontos: A RE és DE láb legyen **földön**, mert a vezérlő csak fogad DMX adatot.
+
+---
+
+## LED Szalag Bekötés
+
+| LED Szalag | Csatlakozás |
+| :--- | :--- |
+| 5V | Tápegység 5V |
+| GND | Tápegység GND + Arduino GND |
+| DI | Arduino D6 |
+
+Ajánlott a LED szalagot közvetlenül a tápról etetni, és hosszabb szalag esetén több ponton visszatáplálni.
+
 
 ## DMX Csatorna Kiosztás
 
@@ -43,3 +81,23 @@ A 6-csatornás mód (CH6) aktiválásával az alábbi programok futtathatók:
 3.  **Fade Színváltás:** Lágy elhalványulással kísért automatikus színváltás.
 
 ---
+
+## Könyvtárak
+
+A projekt futtatásához az alábbi Arduino könyvtárak szükségesek:
+
+- **FastLED**
+- **Conceptinetics DMX Library**
+
+Mindkettő telepíthető az Arduino IDE Library Managerből.
+
+---
+
+## DMX Címzés
+
+A kontroller a kódban beállított DMX Start Addressről indul.  
+Alapérték: **1-es csatorna**
+
+Kódban módosítható:
+```cpp
+#define DMX_START 1
