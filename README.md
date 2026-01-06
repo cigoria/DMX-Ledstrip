@@ -25,7 +25,7 @@ A legtöbb DMX csatlakozó esetén:
 
 | MAX485 Pin | Arduino Pin |
 | :--- | :--- |
-| RO | **D2** |
+| RO | **D0 (RX)** |
 | RE | **GND** |
 | DE | **GND** |
 | DI | Nem használt |
