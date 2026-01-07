@@ -4,9 +4,9 @@
 
 A projekt megépítéséhez az alábbi főbb alkatrészekre van szükség:
 
-* **Arduino nano:** [Aliexpress link](https://www.aliexpress.com/item/1005007475356474.html) - Arduino Nano v3 usb-c
+* **Arduino nano:** [Aliexpress link](https://www.aliexpress.com/item/1005008391175023.html) - Arduino Nano v3 usb-c
 * **RGB LED Szalag:** [Aliexpress link](https://www.aliexpress.com/item/1005006766819624.html) - WS2813 5V 2m 60led IP30 Black
-* **DMX → TTL átalakító:** MAX485
+* **DMX → TTL átalakító:** [Aliexpress link](https://www.aliexpress.com/item/1005009347355438.html) - Max485
 
 ---
 
