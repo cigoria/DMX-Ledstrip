@@ -3,13 +3,19 @@
 
 // --------- KONFIG ---------
 #define LED_PIN 6
-#define NUM_LEDS 120         // 2m * 60 LED/m
-#define DMX_START 1          // DMX kezdő cím
+#define NUM_LEDS 60         // 1m * 60 LED/m
 
-//#define MODE_B             // csak az egyiket hagyd
-#define MODE_A
+#define PIN_ADDR_UP 7
+#define PIN_ADDR_DOWN 8
+
+#define PIN_SWITCH_A 9
+#define PIN_SWITCH_B 10
 
 CRGB leds[NUM_LEDS];
+
+int dmxStartAddress = 1;
+bool lastUpState = HIGH;
+bool lastDownState = HIGH;
 
 // --------- Effekt változók ---------
 uint8_t rainbowHue = 0;
@@ -78,6 +84,11 @@ void fadeChange()
 // --------- SETUP ---------
 void setup()
 {
+  pinMode(PIN_SWITCH_A, INPUT);
+  pinMode(PIN_SWITCH_B, INPUT);
+  pinMode(PIN_ADDR_UP, INPUT_PULLUP);
+  pinMode(PIN_ADDR_DOWN, INPUT_PULLUP);
+
   FastLED.addLeds<NEOPIXEL, LED_PIN>(leds, NUM_LEDS);
   FastLED.clear();
   FastLED.show();
@@ -89,13 +100,29 @@ void setup()
 // --------- LOOP ---------
 void loop()
 {
-#ifdef MODE_A
-  uint8_t R = DMXSerial.read(DMX_START + 0);
-  uint8_t G = DMXSerial.read(DMX_START + 1);
-  uint8_t B = DMXSerial.read(DMX_START + 2);
-  uint8_t Master = DMXSerial.read(DMX_START + 3);
-  uint8_t Strobe = DMXSerial.read(DMX_START + 4);
-  uint8_t Mode = DMXSerial.read(DMX_START + 5);
+  // --- DMX Cím Állítás ---
+  bool currentUp = digitalRead(PIN_ADDR_UP);
+  bool currentDown = digitalRead(PIN_ADDR_DOWN);
+
+  if (currentUp == LOW && lastUpState == HIGH) {
+    if (dmxStartAddress < 506) dmxStartAddress++; // Max cím védelem
+    delay(50); // Pergésmentesítés
+  }
+  lastUpState = currentUp;
+
+  if (currentDown == LOW && lastDownState == HIGH) {
+    if (dmxStartAddress > 1) dmxStartAddress--;
+    delay(50); // Pergésmentesítés
+  }
+  lastDownState = currentDown;
+
+  if (digitalRead(PIN_SWITCH_A) == HIGH) {
+  uint8_t R = DMXSerial.read(dmxStartAddress + 0);
+  uint8_t G = DMXSerial.read(dmxStartAddress + 1);
+  uint8_t B = DMXSerial.read(dmxStartAddress + 2);
+  uint8_t Master = DMXSerial.read(dmxStartAddress + 3);
+  uint8_t Strobe = DMXSerial.read(dmxStartAddress + 4);
+  uint8_t Mode = DMXSerial.read(dmxStartAddress + 5);
 
   // ----- Strobe -----
   static unsigned long strobeTimer = 0;
@@ -131,16 +158,13 @@ void loop()
   // ---- Normál RGB + Master ----
   showColor(R,G,B,Master);
 
-#endif
+  } else if (digitalRead(PIN_SWITCH_B) == HIGH) {
 
-
-
-#ifdef MODE_B
-  uint8_t segment = DMXSerial.read(DMX_START + 0);
-  uint8_t R = DMXSerial.read(DMX_START + 1);
-  uint8_t G = DMXSerial.read(DMX_START + 2);
-  uint8_t B = DMXSerial.read(DMX_START + 3);
-  uint8_t Master = DMXSerial.read(DMX_START + 4);
+  uint8_t segment = DMXSerial.read(dmxStartAddress + 0);
+  uint8_t R = DMXSerial.read(dmxStartAddress + 1);
+  uint8_t G = DMXSerial.read(dmxStartAddress + 2);
+  uint8_t B = DMXSerial.read(dmxStartAddress + 3);
+  uint8_t Master = DMXSerial.read(dmxStartAddress + 4);
 
   int ledIndex = map(segment, 0, 255, 0, NUM_LEDS-1);
 
@@ -153,5 +177,5 @@ void loop()
   }
 
   FastLED.show();
-#endif
+  }
 }

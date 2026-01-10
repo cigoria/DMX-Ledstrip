@@ -48,6 +48,26 @@ A legtöbb DMX csatlakozó esetén:
 Ajánlott a LED szalagot közvetlenül a tápról etetni, és hosszabb szalag esetén több ponton visszatáplálni.
 
 
+## Üzemmód Kapcsoló Bekötés
+
+A két üzemmód (A és B) közötti váltáshoz egy 2-állású kapcsolót használunk.
+
+| Kapcsoló | Arduino Pin | Megjegyzés |
+| :--- | :--- | :--- |
+| Közös (Common) | 5V | |
+| 1. állás | D9 | "A" Üzemmód |
+| 2. állás | D10 | "B" Üzemmód |
+
+## DMX Cím Állító Gombok
+
+Két nyomógomb segítségével állítható a kezdőcím (Start Address).
+A gombok a belső felhúzóellenállás (INPUT_PULLUP) miatt a **GND** felé kapcsolnak.
+
+| Gomb | Arduino Pin | Funkció |
+| :--- | :--- | :--- |
+| UP | D7 | Cím növelése (+1) |
+| DOWN | D8 | Cím csökkentése (-1) |
+
 ## DMX Csatorna Kiosztás
 
 A rendszer két választható üzemmódot támogat a rugalmas vezérlés érdekében.
