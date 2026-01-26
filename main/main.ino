@@ -11,11 +11,14 @@
 #define PIN_SWITCH_A 9
 #define PIN_SWITCH_B 10
 
+#define BINARY_DISPLAY_TIME 3000  // Bináris megjelenítés ideje ms-ban (3 másodperc)
+
 CRGB leds[NUM_LEDS];
 
 int dmxStartAddress = 1;
 bool lastUpState = HIGH;
 bool lastDownState = HIGH;
+unsigned long lastButtonPress = 0;  // Utolsó gombnyomás ideje
 
 // --------- Effekt változók ---------
 uint8_t rainbowHue = 0;
@@ -24,6 +27,23 @@ bool fadeDir = true;
 unsigned long lastStep = 0;
 
 // --------- Segédfüggvények ---------
+void showBinaryChannel(int channel)
+{
+  // Töröljük az első 10 LED-et
+  for(int i = 0; i < 10; i++) {
+    leds[i] = CRGB::Black;
+  }
+  
+  // Bináris megjelenítés az első 10 LED-en (LSB-től MSB-ig)
+  for(int i = 0; i < 10; i++) {
+    if(channel & (1 << i)) {
+      leds[i] = CRGB::White;  // 1 bit = fehér
+    }
+  }
+  
+  FastLED.show();
+}
+
 void showColor(uint8_t r, uint8_t g, uint8_t b, uint8_t master)
 {
   for(int i=0;i<NUM_LEDS;i++)
@@ -106,15 +126,23 @@ void loop()
 
   if (currentUp == LOW && lastUpState == HIGH) {
     if (dmxStartAddress < 506) dmxStartAddress++; // Max cím védelem
+    lastButtonPress = millis();  // Gombnyomás időpontja
     delay(50); // Pergésmentesítés
   }
   lastUpState = currentUp;
 
   if (currentDown == LOW && lastDownState == HIGH) {
     if (dmxStartAddress > 1) dmxStartAddress--;
+    lastButtonPress = millis();  // Gombnyomás időpontja
     delay(50); // Pergésmentesítés
   }
   lastDownState = currentDown;
+
+  // --- Bináris megjelenítés gombnyomás után ---
+  if (millis() - lastButtonPress < BINARY_DISPLAY_TIME) {
+    showBinaryChannel(dmxStartAddress);
+    return;  // Ne futtassuk a normál DMX kódot
+  }
 
   if (digitalRead(PIN_SWITCH_A) == HIGH) {
   uint8_t R = DMXSerial.read(dmxStartAddress + 0);
