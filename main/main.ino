@@ -5,6 +5,8 @@
 #define LED_PIN 6
 #define NUM_LEDS 60         // 1m * 60 LED/m
 
+#define POWER_PIN 4
+
 #define PIN_ADDR_UP 7
 #define PIN_ADDR_DOWN 8
 
@@ -106,6 +108,8 @@ void setup()
 {
   pinMode(PIN_SWITCH_A, INPUT);
   pinMode(PIN_SWITCH_B, INPUT);
+  pinMode(POWER_PIN, OUTPUT);
+  digitalWrite(POWER_PIN, HIGH);
   pinMode(PIN_ADDR_UP, INPUT_PULLUP);
   pinMode(PIN_ADDR_DOWN, INPUT_PULLUP);
 
