@@ -125,6 +125,16 @@ void setup()
 
   // DMX fogadás
   DMXSerial.init(DMXReceiver);
+
+  // Indításkor 5 mp "Mode 1" jellegű szivárvány
+  rainbowHue = 0;
+  unsigned long startupStart = millis();
+  while (millis() - startupStart < 5000) {
+    rainbowEffect();
+    delay(30);
+  }
+  FastLED.clear();
+  FastLED.show();
 }
 
 // --------- LOOP ---------
