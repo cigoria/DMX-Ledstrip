@@ -22,6 +22,12 @@ bool lastUpState = HIGH;
 bool lastDownState = HIGH;
 unsigned long lastButtonPress = 0;  // Utolsó gombnyomás ideje
 
+// Gomb nyomva tartás kezeléséhez
+unsigned long upPressTime = 0;
+unsigned long downPressTime = 0;
+unsigned long lastRepeatUp = 0;
+unsigned long lastRepeatDown = 0;
+
 // --------- Effekt változók ---------
 uint8_t rainbowHue = 0;
 uint8_t fadeValue = 0;
@@ -128,17 +134,74 @@ void loop()
   bool currentUp = digitalRead(PIN_ADDR_UP);
   bool currentDown = digitalRead(PIN_ADDR_DOWN);
 
+  unsigned long now = millis();
+
   if (currentUp == LOW && lastUpState == HIGH) {
     if (dmxStartAddress < 506) dmxStartAddress++; // Max cím védelem
-    lastButtonPress = millis();  // Gombnyomás időpontja
-    delay(50); // Pergésmentesítés
+    lastButtonPress = now;  // Gombnyomás időpontja
+    upPressTime = now;      // Nyomva tartás kezdete
+    lastRepeatUp = now;     // Ismétlés időzítő indul
+  }
+  // Hosszú nyomás – gyors ismétlés
+  if (currentUp == LOW && upPressTime > 0) {
+    unsigned long held = now - upPressTime;
+
+    // Első 500 ms: csak 1 lépés (single click érzet)
+    if (held > 500) {
+      // Minél tovább tartod, annál gyorsabb:
+      // 0.5–1 s: lassabb, 1–2 s: közepes, 2 s felett: nagyon gyors
+      unsigned long interval;
+      if (held > 2000) {
+        interval = 50;   // nagyon gyors
+      } else if (held > 1000) {
+        interval = 100;  // közepes
+      } else {
+        interval = 200;  // lassabb
+      }
+
+      if (now - lastRepeatUp >= interval) {
+        if (dmxStartAddress < 506) dmxStartAddress++;
+        lastRepeatUp = now;
+        lastButtonPress = now;
+      }
+    }
+  }
+  // Ha elengedjük a gombot, nullázzuk az állapotot
+  if (currentUp == HIGH && lastUpState == LOW) {
+    upPressTime = 0;
   }
   lastUpState = currentUp;
 
   if (currentDown == LOW && lastDownState == HIGH) {
     if (dmxStartAddress > 1) dmxStartAddress--;
-    lastButtonPress = millis();  // Gombnyomás időpontja
-    delay(50); // Pergésmentesítés
+    lastButtonPress = now;  // Gombnyomás időpontja
+    downPressTime = now;    // Nyomva tartás kezdete
+    lastRepeatDown = now;   // Ismétlés időzítő indul
+  }
+  // Hosszú nyomás – gyors ismétlés
+  if (currentDown == LOW && downPressTime > 0) {
+    unsigned long held = now - downPressTime;
+
+    if (held > 500) {
+      unsigned long interval;
+      if (held > 2000) {
+        interval = 50;   // nagyon gyors
+      } else if (held > 1000) {
+        interval = 100;  // közepes
+      } else {
+        interval = 200;  // lassabb
+      }
+
+      if (now - lastRepeatDown >= interval) {
+        if (dmxStartAddress > 1) dmxStartAddress--;
+        lastRepeatDown = now;
+        lastButtonPress = now;
+      }
+    }
+  }
+  // Ha elengedjük a gombot, nullázzuk az állapotot
+  if (currentDown == HIGH && lastDownState == LOW) {
+    downPressTime = 0;
   }
   lastDownState = currentDown;
 
