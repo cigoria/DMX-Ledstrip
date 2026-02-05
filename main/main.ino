@@ -5,8 +5,6 @@
 #define LED_PIN 6
 #define NUM_LEDS 60         // 1m * 60 LED/m
 
-#define POWER_PIN 4
-
 #define PIN_ADDR_UP 7
 #define PIN_ADDR_DOWN 8
 
@@ -45,7 +43,12 @@ void showBinaryChannel(int channel)
   // Bináris megjelenítés az első 10 LED-en (LSB-től MSB-ig)
   for(int i = 0; i < 10; i++) {
     if(channel & (1 << i)) {
-      leds[i] = CRGB::White;  // 1 bit = fehér
+      if (digitalRead(PIN_SWITCH_A) == LOW) {
+       leds[i] = CRGB::Red;  // 1 bit = Piros, ha A mód
+      }
+      else {
+       leds[i] = CRGB::Blue;  // 1 bit = Kék, ha B mód
+      }
     }
   }
   
@@ -112,10 +115,8 @@ void fadeChange()
 // --------- SETUP ---------
 void setup()
 {
-  pinMode(PIN_SWITCH_A, INPUT);
-  pinMode(PIN_SWITCH_B, INPUT);
-  pinMode(POWER_PIN, OUTPUT);
-  digitalWrite(POWER_PIN, HIGH);
+  pinMode(PIN_SWITCH_A, INPUT_PULLUP);
+  pinMode(PIN_SWITCH_B, INPUT_PULLUP);
   pinMode(PIN_ADDR_UP, INPUT_PULLUP);
   pinMode(PIN_ADDR_DOWN, INPUT_PULLUP);
 
@@ -221,7 +222,7 @@ void loop()
     return;  // Ne futtassuk a normál DMX kódot
   }
 
-  if (digitalRead(PIN_SWITCH_A) == HIGH) {
+  if (digitalRead(PIN_SWITCH_A) == LOW) {
   uint8_t R = DMXSerial.read(dmxStartAddress + 0);
   uint8_t G = DMXSerial.read(dmxStartAddress + 1);
   uint8_t B = DMXSerial.read(dmxStartAddress + 2);
@@ -263,7 +264,7 @@ void loop()
   // ---- Normál RGB + Master ----
   showColor(R,G,B,Master);
 
-  } else if (digitalRead(PIN_SWITCH_B) == HIGH) {
+  } else if (digitalRead(PIN_SWITCH_B) == LOW) {
 
   uint8_t segment = DMXSerial.read(dmxStartAddress + 0);
   uint8_t R = DMXSerial.read(dmxStartAddress + 1);
