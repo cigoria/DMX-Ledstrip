@@ -1,5 +1,7 @@
 #include <FastLED.h>
 #include <DMXSerial.h>
+#include <EEPROM.h>
+
 
 // --------- KONFIG ---------
 #define LED_PIN 6
@@ -15,7 +17,7 @@
 
 CRGB leds[NUM_LEDS];
 
-int dmxStartAddress = 1;
+uint16_t dmxStartAddress = 1;
 bool lastUpState = HIGH;
 bool lastDownState = HIGH;
 unsigned long lastButtonPress = 0;  // Utolsó gombnyomás ideje
@@ -123,6 +125,7 @@ void setup()
   FastLED.addLeds<NEOPIXEL, LED_PIN>(leds, NUM_LEDS);
   FastLED.clear();
   FastLED.show();
+  EEPROM.get(0,dmxStartAddress);
 
   // DMX fogadás
   DMXSerial.init(DMXReceiver);
@@ -219,8 +222,10 @@ void loop()
   // --- Bináris megjelenítés gombnyomás után ---
   if (millis() - lastButtonPress < BINARY_DISPLAY_TIME) {
     showBinaryChannel(dmxStartAddress);
+    EEPROM.put(0,dmxStartAddress);
     return;  // Ne futtassuk a normál DMX kódot
   }
+
 
   if (digitalRead(PIN_SWITCH_A) == LOW) {
   uint8_t R = DMXSerial.read(dmxStartAddress + 0);
